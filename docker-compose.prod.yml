@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: dei-verbum-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-dei_verbum}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-dei_verbum_prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-dei_verbum}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dei-verbum
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: dei-verbum-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - dei-verbum
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dei-verbum-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      ASAAS_API_KEY: ${ASAAS_API_KEY}
+      ASAAS_ENV: ${ASAAS_ENV:-production}
+      API_URL: ${API_URL:-http://localhost:3001}
+      FRONTEND_URL: ${FRONTEND_URL:-https://deiverbum.com.br}
+      STORE_NAME: ${STORE_NAME:-DEI VERBUM}
+      STORE_EMAIL: ${STORE_EMAIL:-contato@deiverbum.com.br}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - dei-verbum
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - API_URL=${API_URL:-http://backend:3001}
+    container_name: dei-verbum-web
+    restart: always
+    environment:
+      - API_URL=${API_URL:-http://backend:3001}
+    depends_on:
+      - backend
+    networks:
+      - dei-verbum
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: dei-verbum-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - uploads:/var/www/uploads:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - dei-verbum
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads:
+
+networks:
+  dei-verbum:
+    driver: bridge

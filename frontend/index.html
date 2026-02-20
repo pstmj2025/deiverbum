@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEI VERBUM - Livros Novos e Usados</title>
+    <link rel="stylesheet" href="frontend/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>DEI VERBUM</h1>
+                <span>Livros Novos e Usados</span>
+            </div>
+            <nav>
+                <a href="#" class="nav-link">Início</a>
+                <a href="#books" class="nav-link">Livros</a>
+                <a href="/admin" class="nav-link admin-link">Painel Admin</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2>Descubra o Mundo dos Livros</h2>
+                <p>Livros novos e usados em ótimo estado. Encontre sua próxima leitura!</p>
+            </div>
+        </section>
+
+        <section class="search-section">
+            <div class="container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar por título, autor ou ISBN...">
+                    <button id="searchBtn">Buscar</button>
+                </div>
+                <div class="filters">
+                    <select id="conditionFilter">
+                        <option value="">Todos os estados</option>
+                        <option value="new">Novo</option>
+                        <option value="used">Usado</option>
+                    </select>
+                    <select id="categoryFilter">
+                        <option value="">Todas as categorias</option>
+                        <option value="artes">Artes</option>
+                        <option value="direito">Direito</option>
+                        <option value="economia">Economia</option>
+                        <option value="filosofia">Filosofia</option>
+                        <option value="historia">História</option>
+                        <option value="literatura">Literatura</option>
+                        <option value="teologia">Teologia</option>
+                    </select>
+                    <input type="number" id="minPrice" placeholder="Preço mínimo">
+                    <input type="number" id="maxPrice" placeholder="Preço máximo">
+                </div>
+            </div>
+        </section>
+
+        <section class="books-section" id="books">
+            <div class="container">
+                <h3>Livros em Destaque</h3>
+                <div id="booksGrid" class="books-grid">
+                    <!-- Books will be loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 DEI VERBUM - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <!-- Book Detail Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="bookDetail"></div>
+        </div>
+    </div>
+
+    <script src="frontend/app.js"></script>
+</body>
+</html>

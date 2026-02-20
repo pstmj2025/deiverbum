@@ -1,0 +1,377 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================= USUÁRIOS =================
+enum UserRole {
+  ADMIN    // Administrador principal
+  MANAGER  // Gerente (pode gerenciar produtos/pedidos)
+  CUSTOMER // Cliente
+}
+
+model User {
+  id                String            @id @default(uuid())
+  email             String            @unique
+  password          String
+  name              String
+  phone             String?
+  avatar            String?           // URL da imagem
+  role              UserRole          @default(CUSTOMER)
+  active            Boolean           @default(true)
+  
+  // IDs externos (pagamentos)
+  asaasCustomerId   String?           // Cliente no Asaas
+  stripeCustomerId  String?           // Cliente no Stripe
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  // Relations
+  addresses         Address[]
+  orders            Order[]
+  favorites         Favorite[]
+  
+  // Para futuro multi-vendedor
+  vendor            Vendor?           @relation(fields: [vendorId], references: [id])
+  vendorId          String?
+  
+  @@index([asaasCustomerId])
+  @@index([stripeCustomerId])
+}
+
+// ================= ENDEREÇOS =================
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String   // Ex: "Casa", "Trabalho"
+  cep          String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String   // UF
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders       Order[]
+}
+
+// ================= CATEGORIAS =================
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Auto-relacionamento (subcategorias)
+  parentId    String?
+  parent      Category? @relation("CategoryParent", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryParent")
+  
+  // Relations
+  products    Product[]
+}
+
+// ================= PRODUTOS =================
+enum ProductCondition {
+  NEW         // Novo
+  LIKE_NEW    // Semi-novo
+  GOOD        // Bom estado
+  ACCEPTABLE  // Estado regular
+}
+
+enum ProductType {
+  BOOK        // Livro
+  STATIONERY  // Papelaria
+  OTHER       // Outros
+}
+
+model Product {
+  id            String          @id @default(uuid())
+  sku           String          @unique  // Código interno
+  name          String
+  slug          String          @unique
+  description   String          @db.Text
+  type          ProductType     @default(BOOK)
+  
+  // Preços
+  price         Decimal         @db.Decimal(10, 2)
+  cost          Decimal?        @db.Decimal(10, 2)
+  comparePrice  Decimal?        @db.Decimal(10, 2)  // Preço original (para mostrar desconto)
+  
+  // Estoque
+  stock         Int             @default(0)
+  lowStockAlert Int             @default(5)  // Alerta quando atinge esse número
+  
+  // Características
+  condition     ProductCondition @default(NEW)
+  weight        Decimal?        @db.Decimal(6, 3)  // Em kg
+  dimensions    Json?           // {length, width, height}
+  
+  // Dados de livro
+  isbn10        String?
+  isbn13        String?
+  author        String?
+  publisher     String?
+  year          Int?
+  pages         Int?
+  language      String          @default("pt-BR")
+  
+  // Visibilidade
+  featured      Boolean         @default(false)
+  active        Boolean         @default(true)
+  
+  // Imagens (JSON array de URLs)
+  images        Json            @default("[]")
+  
+  // SEO
+  metaTitle     String?
+  metaDesc      String?
+  
+  // Timestamps
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relations
+  categoryId    String
+  category      Category        @relation(fields: [categoryId], references: [id])
+  
+  orderItems    OrderItem[]
+  favorites     Favorite[]
+  stockMovements StockMovement[]
+  
+  // Futuro: vincular com vendor
+  vendorId      String?
+  
+  @@index([categoryId])
+  @@index([slug])
+  @@index([active])
+  @@index([type, condition])
+}
+
+// ================= FAVORITOS =================
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+}
+
+// ================= PEDIDOS =================
+enum OrderStatus {
+  PENDING       // Aguardando pagamento
+  PROCESSING    // Pagamento confirmado, preparando
+  SHIPPED       // Enviado
+  DELIVERED     // Entregue
+  CANCELLED     // Cancelado
+  REFUNDED      // Reembolsado
+}
+
+enum PaymentMethod {
+  PIX
+  BOLETO
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id              String          @id @default(uuid())
+  orderNumber     String          @unique  // DEI-202502180001
+  
+  // Cliente
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  
+  // Endereço de entrega
+  addressId       String
+  address         Address         @relation(fields: [addressId], references: [id])
+  
+  // Valores
+  subtotal        Decimal         @db.Decimal(10, 2)  // Só os itens
+  shippingCost    Decimal         @db.Decimal(10, 2)  // Frete
+  discount        Decimal         @default(0) @db.Decimal(10, 2)
+  total           Decimal         @db.Decimal(10, 2)  // Total final
+  
+  // Status
+  status          OrderStatus     @default(PENDING)
+  paymentStatus   PaymentStatus   @default(PENDING)
+  paymentMethod   PaymentMethod?
+  
+  // Tracking
+  trackingCode    String?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  
+  // Notas
+  customerNote    String?
+  internalNote    String?
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  paidAt          DateTime?
+  
+  // Relations
+  items           OrderItem[]
+  payment         Payment?
+  
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String
+  
+  // Dados do produto (fotográfico)
+  productName String
+  productSku  String
+  productImage Json?   // Primeira imagem do produto
+  
+  quantity    Int
+  price       Decimal  @db.Decimal(10, 2)  // Preço na hora da compra
+  total       Decimal  @db.Decimal(10, 2)
+  
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ================= PAGAMENTOS =================
+model Payment {
+  id            String          @id @default(uuid())
+  orderId       String          @unique
+  order         Order           @relation(fields: [orderId], references: [id])
+  
+  method        PaymentMethod
+  amount        Decimal         @db.Decimal(10, 2)
+  status        PaymentStatus   @default(PENDING)
+  
+  // Dados do gateway
+  gateway       String          // stripe, asaas
+  gatewayId     String?         // ID externo no gateway
+  gatewayData   Json?           // Resposta do gateway
+  
+  // PIX específico
+  pixQrCode     String?
+  pixCode       String?         // Código copia e cola
+  pixExpiresAt  DateTime?
+  
+  // Boleto específico
+  boletoUrl          String?
+  boletoBarcode      String?
+  boletoExpiresAt    DateTime?
+  
+  // Cartão específico
+  cardLastDigits    String?
+  cardBrand         String?          // visa, mastercard, etc
+  cardInstallments  Int              @default(1)
+  
+  // Timestamps
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  @@index([gatewayId])
+  @@index([status])
+}
+
+// ================= MOVIMENTAÇÃO DE ESTOQUE =================
+enum StockMovementType {
+  IN          // Entrada
+  OUT         // Saída
+  ADJUSTMENT  // Ajuste
+  RETURN      // Devolução
+}
+
+model StockMovement {
+  id          String              @id @default(uuid())
+  productId   String
+  product     Product             @relation(fields: [productId], references: [id])
+  
+  quantity    Int                 // Positivo para entrada, negativo para saída
+  type        StockMovementType
+  
+  // Referência
+  orderId     String?             // Se foi por venda
+  note        String?             // Observação
+  
+  // Quem fez o movimento
+  performedBy String?             // userId que registrou
+  
+  createdAt   DateTime            @default(now())
+  
+  @@index([productId])
+  @@index([createdAt])
+}
+
+// ================= FORNECEDORES / VENDEDORES (Multi-vendedor futuro) =================
+model Vendor {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  document      String?   // CNPJ/CPF
+  
+  // Dados bancários (para repasse)
+  bankAccount   Json?     // { bank, agency, account, type }
+  commissionRate Decimal  @default(10.00) @db.Decimal(5, 2) // % de comissão
+  
+  // Endereço
+  address       Json?     // { street, number, city, state, cep }
+  
+  // Status
+  active        Boolean   @default(true)
+  verified      Boolean   @default(false)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  users         User[]
+}
+
+// ================= CONFIGURAÇÕES DA LOJA =================
+model StoreConfig {
+  id                    String   @id @default(uuid())
+  key                   String   @unique
+  value                 Json
+  description           String?
+  updatedAt             DateTime @updatedAt
+}
+
+// Configurações comuns (key):
+// store_name, store_email, store_phone
+// shipping_default_cost, shipping_free_above
+// payment_pix_discount, payment_boleto_discount

@@ -1,0 +1,13 @@
+{
+  "books": [],
+  "orders": [],
+  "admin": {
+    "username": "admin",
+    "password": "dei-verbum-2026"
+  },
+  "stats": {
+    "totalBooks": 0,
+    "totalOrders": 0,
+    "totalRevenue": 0
+  }
+}

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - DEI VERBUM</title>
+    <link rel="stylesheet" href="../frontend/style.css">
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <h1>DEI VERBUM</h1>
+            <h2>Painel Administrativo</h2>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="Usuário" value="admin" required>
+                <input type="password" id="password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+                <p id="loginError" class="error-msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="admin-panel" style="display:none;">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>DEI VERBUM</h1>
+                <span>Admin</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-page="books">
+                    <span>📚</span> Livros
+                </a>
+                <a href="#" class="nav-item" data-page="orders">
+                    <span>🛒</span> Pedidos
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="btn-secondary">Sair</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Dashboard -->
+            <div id="dashboardPage" class="page">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total de Livros</h3>
+                        <p id="statBooks" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total de Pedidos</h3>
+                        <p id="statOrders" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pendentes</h3>
+                        <p id="statPending" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Receita Estimada</h3>
+                        <p id="statRevenue" class="stat-value">R$ 0,00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books Management -->
+            <div id="booksPage" class="page" style="display:none;">
+                <div class="page-header">
+                    <h2>Gerenciamento de Livros</h2>
+                    <button id="addBookBtn" class="btn-primary">+ Novo Livro</button>
+                </div>
+                <div id="booksList" class="admin-table">
+                    <p>Carregando...</p>
+                </div>
+            </div>
+
+            <!-- Orders -->
+            <div id="ordersPage" class="page" style="display:none;">
+                <h2>Pedidos e Reservas</h2>
+                <div id="ordersList" class="admin-table">
+                    <p>Carregando...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Book Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Novo Livro</h3>
+                <button class="close" onclick="closeBookModal()">&times;</button>
+            </div>
+            <form id="bookForm" enctype="multipart/form-data">
+                <input type="hidden" id="editBookId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Título</label>
+                        <input type="text" id="bookTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Autor</label>
+                        <input type="text" id="bookAuthor" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Preço (R$)</label>
+                        <input type="number" id="bookPrice" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="bookQuantity" min="1" value="1" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="bookCondition" required>
+                            <option value="new">Novo</option>
+                            <option value="used">Usado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="bookCategory">
+                            <option value="">Selecione...</option>
+                            <option value="artes">Artes</option>
+                            <option value="direito">Direito</option>
+                            <option value="economia">Economia</option>
+                            <option value="filosofia">Filosofia</option>
+                            <option value="historia">História</option>
+                            <option value="literatura">Literatura</option>
+                            <option value="teologia">Teologia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ISBN</label>
+                    <input type="text" id="bookIsbn">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="bookDescription" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Imagem da Capa</label>
+                    <input type="file" id="bookImage" accept="image/*">
+                    <img id="bookImagePreview" src="" style="display:none;max-width:200px;margin-top:10px;border-radius:8px;">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeBookModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
