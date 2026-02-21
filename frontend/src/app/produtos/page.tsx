@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { Product } from '@/types';
 import { ProductCard } from '@/components/ProductCard';
 import api from '@/lib/axios';
@@ -58,7 +57,6 @@ export default function ProductsPage() {
         params.sort = sort;
         params.order = order;
       }
-
       const response = await api.get('/products', { params });
       setProducts(response.data.products);
     } catch (error) {
@@ -69,7 +67,7 @@ export default function ProductsPage() {
   };
 
   const handleFilterChange = (key: keyof Filters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const applyFilters = () => {
@@ -94,16 +92,15 @@ export default function ProductsPage() {
       {/* Header Section */}
       <section className="bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-serif font-bold text-center">Nossos Produtos</h1>
+          <h1 className="text-3xl font-bold text-center">Nossos Produtos</h1>
           <p className="text-gray-600 text-center mt-2">Livros novos e usados, papelaria e presentes cristãos</p>
         </div>
       </section>
 
-      {/* Filters & Search */}
+      {/* Filters */}
       <section className="py-6 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -112,36 +109,30 @@ export default function ProductsPage() {
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-dei-primary focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg"
               />
             </div>
-
-            {/* Filter Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
             >
               <SlidersHorizontal className="h-5 w-5" />
               Filtros
             </button>
-
-            {/* Sort */}
             <select
               value={filters.sort}
-                onChange={(e) => {
+              onChange={(e) => {
                 handleFilterChange('sort', e.target.value);
                 setTimeout(applyFilters, 0);
               }}
-              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-dei-primary"
+              className="px-4 py-2 border rounded-lg"
             >
               <option value="newest">Mais recentes</option>
               <option value="price-asc">Menor preço</option>
               <option value="price-desc">Maior preço</option>
-              <option value="name-asc">Nome A-Z</option>
             </select>
           </div>
 
-          {/* Expandable Filters */}
           {showFilters && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
@@ -152,7 +143,7 @@ export default function ProductsPage() {
                   className="w-full px-3 py-2 border rounded-lg"
                 >
                   <option value="">Todas</option>
-                  {categories.map(cat => (
+                  {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
@@ -161,7 +152,6 @@ export default function ProductsPage() {
                 <label className="block text-sm font-medium mb-1">Preço mínimo</label>
                 <input
                   type="number"
-                  placeholder="R$"
                   value={filters.minPrice}
                   onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg"
@@ -171,7 +161,6 @@ export default function ProductsPage() {
                 <label className="block text-sm font-medium mb-1">Preço máximo</label>
                 <input
                   type="number"
-                  placeholder="R$"
                   value={filters.maxPrice}
                   onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg"
@@ -187,20 +176,20 @@ export default function ProductsPage() {
                   <option value="">Todas</option>
                   <option value="NEW">Novo</option>
                   <option value="LIKE_NEW">Semi-novo</option>
-                  <option value="GOOD">Bom estado</option>
+                  <option value="GOOD">Bom</option>
                   <option value="ACCEPTABLE">Regular</option>
                 </select>
               </div>
               <div className="md:col-span-4 flex gap-2">
                 <button
                   onClick={applyFilters}
-                  className="px-6 py-2 bg-dei-primary text-white rounded-lg hover:bg-opacity-90"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg"
                 >
-                  Aplicar Filtros
+                  Aplicar
                 </button>
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-100"
+                  className="px-6 py-2 border rounded-lg"
                 >
                   Limpar
                 </button>
@@ -214,4 +203,23 @@ export default function ProductsPage() {
       <section className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
-            <
+            <div className="text-center py-12">
+              <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+              <p className="mt-4 text-gray-600">Carregando produtos...</p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Nenhum produto encontrado.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

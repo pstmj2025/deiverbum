@@ -4,13 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { CreditCard, Truck, MapPin } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,7 +36,7 @@ export default function CheckoutPage() {
           <div className="text-6xl mb-4">🎉</div>
           <h1 className="text-3xl font-bold mb-4">Pedido Realizado!</h1>
           <p className="text-gray-600 mb-8">Seu pedido foi recebido. Em breve enviaremos atualizações por e-mail.</p>
-          <Link href="/" className="inline-block px-6 py-3 bg-dei-primary text-white rounded-lg hover:opacity-90">
+          <Link href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:opacity-90">
             Voltar para a Loja
           </Link>
         </div>
@@ -49,16 +47,16 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-serif font-bold mb-8">Finalizar Compra</h1>
+        <h1 className="text-3xl font-bold mb-8">Finalizar Compra</h1>
 
         {/* Steps */}
         <div className="flex items-center gap-4 mb-8">
-          <div className={`flex items-center gap-2 ${step >= 1 ? 'text-dei-primary' : 'text-gray-400'}`}>
+          <div className={`flex items-center gap-2 ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
             <MapPin className="h-5 w-5" />
             <span className="font-medium">Endereço</span>
           </div>
           <div className="h-px flex-1 bg-gray-200" />
-          <div className={`flex items-center gap-2 ${step >= 2 ? 'text-dei-primary' : 'text-gray-400'}`}>
+          <div className={`flex items-center gap-2 ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
             <CreditCard className="h-5 w-5" />
             <span className="font-medium">Pagamento</span>
           </div>
@@ -118,7 +116,7 @@ export default function CheckoutPage() {
                     required
                   />
                   <input
-                    placeholder="Complemento (opcional)"
+                    placeholder="Complemento"
                     value={formData.complement}
                     onChange={(e) => setFormData({ ...formData, complement: e.target.value })}
                     className="px-4 py-2 border rounded-lg"
@@ -141,7 +139,7 @@ export default function CheckoutPage() {
                 </div>
                 <button
                   onClick={() => setStep(2)}
-                  className="mt-6 w-full py-3 bg-dei-primary text-white rounded-lg font-semibold hover:opacity-90"
+                  className="mt-6 w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:opacity-90"
                 >
                   Continuar para Pagamento
                 </button>
@@ -156,15 +154,15 @@ export default function CheckoutPage() {
                 </h2>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input type="radio" name="payment" value="pix" defaultChecked className="text-dei-primary" />
+                    <input type="radio" name="payment" value="pix" defaultChecked className="text-blue-600" />
                     <span>PIX (5% de desconto)</span>
                   </label>
                   <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input type="radio" name="payment" value="boleto" className="text-dei-primary" />
+                    <input type="radio" name="payment" value="boleto" className="text-blue-600" />
                     <span>Boleto (3% de desconto)</span>
                   </label>
                   <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input type="radio" name="payment" value="card" className="text-dei-primary" />
+                    <input type="radio" name="payment" value="card" className="text-blue-600" />
                     <span>Cartão de Crédito</span>
                   </label>
                 </div>
@@ -178,4 +176,49 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleCheckout}
                     disabled={loading}
-                    className="flex-1 py-3 bg-dei-primary text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {loading ? 'Processando...' : 'Finalizar Pedido'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow p-6 sticky top-4">
+              <h2 className="text-lg font-bold mb-4">Resumo do Pedido</h2>
+              <div className="space-y-4 mb-6">
+                {items.map((item) => (
+                  <div key={item.id} className="flex gap-4">
+                    <div className="w-16 h-16 bg-gray-100 rounded flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{item.name}</p>
+                      <p className="text-gray-500 text-sm">Qtd: {item.quantity}</p>
+                      <p className="font-semibold">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>R$ {total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Frete</span>
+                  <span className="text-green-600">Grátis</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                  <span>Total</span>
+                  <span>R$ {total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
