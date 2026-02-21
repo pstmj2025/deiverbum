@@ -27,14 +27,6 @@ services:
           type: redis
           name: dei-verbum-redis
           property: connectionString
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: STRIPE_PUBLISHABLE_KEY
-        sync: false
-      - key: ASAAS_API_KEY
-        sync: false
       - key: ASAAS_ENV
         value: sandbox
       - key: STORE_NAME
