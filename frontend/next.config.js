@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  distDir: 'dist',
   images: {
-    domains: ['localhost', 'api.deiverbum.com.br'],
+    domains: ['localhost', 'api.deiverbum.com.br', 'picsum.photos'],
+    unoptimized: true,
   },
   env: {
-    API_URL: process.env.API_URL || 'http://localhost:3001',
+    NEXT_PUBLIC_API_URL: 'http://187.77.45.220:3333',
   },
 }
 

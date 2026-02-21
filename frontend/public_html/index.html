@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEI VERBUM - Livraria Cristã</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dei-primary': '#1e3a5f',
+                        'dei-secondary': '#c9a227',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="bg-dei-primary text-white">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🎩</span>
+                <span class="text-xl font-bold">DEI VERBUM</span>
+            </div>
+            <nav class="hidden md:flex gap-6">
+                <a href="#" class="hover:text-dei-secondary">Início</a>
+                <a href="#" onclick="showProducts()" class="hover:text-dei-secondary">Produtos</a>
+                <a href="#" class="hover:text-dei-secondary">Categorias</a>
+                <a href="#" class="hover:text-dei-secondary">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-dei-primary to-blue-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h1 class="text-4xl font-bold mb-4">No princípio era o Verbo</h1>
+            <p class="text-xl text-gray-200 mb-8">Livraria e papelaria cristã</p>
+            <button onclick="showProducts()" class="px-8 py-3 bg-dei-secondary text-dei-primary rounded-lg font-bold hover:opacity-90">
+                Ver Produtos
+            </button>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="py-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-2xl font-bold text-center mb-8">Categorias</h2>
+            <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center py-8">Carregando...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products -->
+    <section class="py-12 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-2xl font-bold text-center mb-8">Produtos em Destaque</h2>
+            <div id="products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center py-8">Carregando produtos...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dei-primary text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-xl font-bold mb-2">DEI VERBUM</p>
+            <p class="text-gray-300">Livraria cristã e acadêmica</p>
+            <p class="text-sm text-gray-400 mt-4">© 2026 - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <!-- API Script -->
+    <script>
+        const API_URL = 'http://187.77.45.220:5000/api';
+
+        async function loadCategories() {
+            try {
+                const res = await fetch(API_URL + '/categories');
+                const categories = await res.json();
+                document.getElementById('categories').innerHTML = categories.slice(0, 4).map(cat => `
+                    <div class="bg-white rounded-lg shadow p-6 text-center hover:shadow-lg cursor-pointer" onclick="filterCategory('${cat.id}')">
+                        <span class="text-3xl">📚</span>
+                        <h3 class="font-bold mt-2">${cat.name}</h3>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('categories').innerHTML = '<p>Erro ao carregar categorias</p>';
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(API_URL + '/products?featured=true&limit=4');
+                const data = await res.json();
+                document.getElementById('products').innerHTML = data.products.map(p => `
+                    <div class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition">
+                        <div class="h-48 bg-gray-200 flex items-center justify-center">
+                            <span class="text-6xl">📚</span>
+                        </div>
+                        <div class="p-4">
+                            <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">${p.condition === 'NEW' ? 'Novo' : 'Usado'}</span>
+                            <h3 class="font-bold mt-2">${p.name}</h3>
+                            <p class="text-gray-600 text-sm">${p.author || ''}</p>
+                            <p class="text-dei-primary font-bold text-lg mt-2">R$ ${Number(p.price).toFixed(2)}</p>
+                            <button class="w-full mt-3 py-2 bg-dei-primary text-white rounded hover:opacity-90">Ver Detalhes</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('products').innerHTML = '<p>Erro ao carregar produtos</p>';
+            }
+        }
+
+        function showProducts() {
+            document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function filterCategory(id) {
+            window.open(API_URL + '/products?category=' + id, '_blank');
+        }
+
+        // Load on start
+        loadCategories();
+        loadProducts();
+    </script>
+</body>
+</html>

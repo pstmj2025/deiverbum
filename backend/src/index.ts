@@ -75,7 +75,7 @@ async function startServer() {
     
     const PORT = env.PORT;
     
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`🎩 ${env.STORE_NAME} API rodando!`);
       console.log(`📡 URL: http://localhost:${PORT}`);

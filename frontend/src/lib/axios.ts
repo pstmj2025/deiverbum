@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.API_URL || 'http://localhost:3001/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para adicionar token em todas as requisições
+// Interceptor para adicionar token
 api.interceptors.request.use(
   (config) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
