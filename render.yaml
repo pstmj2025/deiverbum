@@ -46,6 +46,7 @@ services:
     name: dei-verbum-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
 
 databases:
   - name: dei-verbum-db
