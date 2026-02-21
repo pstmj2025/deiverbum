@@ -3,12 +3,13 @@ const nextConfig = {
   output: 'export',
   distDir: 'dist',
   images: {
-    domains: ['localhost', 'api.deiverbum.com.br', 'picsum.photos'],
+    domains: ['localhost', 'picsum.photos'],
     unoptimized: true,
   },
   env: {
-    NEXT_PUBLIC_API_URL: 'http://187.77.45.220:3333',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   },
+  trailingSlash: true,
 }
 
 module.exports = nextConfig
