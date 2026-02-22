@@ -8,6 +8,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   condition: string;
+  image?: string;
 }
 
 interface CartState {
@@ -16,23 +17,23 @@ interface CartState {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  total: number;
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
 }
 
-export const useCartStore = create<CartState>()(
+export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      get total() {
-        return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      },
       addItem: (product, quantity = 1) => {
         set((state) => {
           const existing = state.items.find((i) => i.id === product.id);
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+                i.id === product.id
+                  ? { ...i, quantity: i.quantity + quantity }
+                  : i
               ),
             };
           }
@@ -45,6 +46,7 @@ export const useCartStore = create<CartState>()(
                 price: Number(product.price),
                 quantity,
                 condition: product.condition,
+                image: product.images?.[0],
               },
             ],
           };
@@ -67,6 +69,12 @@ export const useCartStore = create<CartState>()(
         }));
       },
       clearCart: () => set({ items: [] }),
+      getTotalItems: () => {
+        return get().items.reduce((sum, item) => sum + item.quantity, 0);
+      },
+      getTotalPrice: () => {
+        return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      },
     }),
     { name: 'cart-storage' }
   )

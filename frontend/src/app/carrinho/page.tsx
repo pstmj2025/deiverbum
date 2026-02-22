@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useCartStore } from '@/store/cart';
+import { useCart } from '@/store/cart';
 import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, total } = useCartStore();
+  const { items, updateQuantity, removeItem, getTotalPrice } = useCart();
+  const total = getTotalPrice();
 
   if (items.length === 0) {
     return (

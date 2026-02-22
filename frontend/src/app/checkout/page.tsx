@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCartStore } from '@/store/cart';
+import { useCart } from '@/store/cart';
 import { CreditCard, Truck, MapPin } from 'lucide-react';
 
 export default function CheckoutPage() {
-  const { items, total, clearCart } = useCartStore();
+  const { items, clearCart, getTotalPrice } = useCart();
+  const total = getTotalPrice();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Product } from '@/types';
 import api from '@/lib/axios';
-import { useCartStore } from '@/store/cart';
+import { useCart } from '@/store/cart';
 import { ChevronLeft, ShoppingCart, Truck, Shield, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -14,7 +14,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const { addItem } = useCartStore();
+  const { addItem } = useCart();
 
   useEffect(() => {
     loadProduct();

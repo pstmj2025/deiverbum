@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
-import { useAuthStore } from '@/store/auth';
+import { useAuth } from '@/store/auth';
 import { BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser } = useAuthStore();
+  const { setUser, setToken, login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,8 +28,7 @@ export default function LoginPage() {
         : formData;
       
       const response = await api.post(endpoint, payload);
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
+      login(response.data.token, response.data.user);
       toast.success(isLogin ? 'Login realizado!' : 'Conta criada!');
       router.push('/');
     } catch (error: any) {
