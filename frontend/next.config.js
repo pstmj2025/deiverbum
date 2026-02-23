@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: 'dist',
   images: {
     domains: ['localhost', 'picsum.photos'],
     unoptimized: true,
