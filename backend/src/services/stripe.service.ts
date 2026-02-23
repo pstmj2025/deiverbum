@@ -14,6 +14,9 @@ export async function createCardPayment(
   customerEmail: string,
   metadata?: { [key: string]: string }
 ) {
+  if (!stripe) {
+    throw new Error('Stripe não configurado. Verifique STRIPE_SECRET_KEY.');
+  }
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
@@ -26,7 +29,7 @@ export async function createCardPayment(
         source: 'dei-verbum',
       },
     });
-    
+
     return {
       id: paymentIntent.id,
       clientSecret: paymentIntent.client_secret,
@@ -41,15 +44,18 @@ export async function createCardPayment(
 
 // Confirmar pagamento
 export async function confirmPayment(paymentIntentId: string) {
+  if (!stripe) {
+    throw new Error('Stripe não configurado. Verifique STRIPE_SECRET_KEY.');
+  }
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
+
     return {
       id: paymentIntent.id,
       status: paymentIntent.status,
       amountReceived: paymentIntent.amount_received,
       paymentMethod: paymentIntent.payment_method_types[0],
-      charges: paymentIntent.charges.data.map(charge => ({
+      charges: (paymentIntent.charges?.data || []).map((charge: any) => ({
         id: charge.id,
         status: charge.status,
         receiptUrl: charge.receipt_url,
@@ -71,6 +77,9 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ) {
+  if (!stripe) {
+    throw new Error('Stripe não configurado. Verifique STRIPE_SECRET_KEY.');
+  }
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -89,7 +98,7 @@ export async function createCheckoutSession(
       cancel_url: cancelUrl,
       customer_email: customerEmail,
     });
-    
+
     return {
       id: session.id,
       url: session.url,
@@ -103,10 +112,13 @@ export async function createCheckoutSession(
 
 // Processar webhook do Stripe
 export function verifyWebhookSignature(
-  payload: string, 
-  signature: string, 
+  payload: string,
+  signature: string,
   webhookSecret: string
 ): Stripe.Event | null {
+  if (!stripe) {
+    throw new Error('Stripe não configurado. Verifique STRIPE_SECRET_KEY.');
+  }
   try {
     return stripe.webhooks.constructEvent(
       payload,

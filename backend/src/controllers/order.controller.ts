@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { Decimal } from '@prisma/client/runtime/library';
 
 // Gerar número de pedido
 function generateOrderNumber(): string {
@@ -33,7 +34,7 @@ export class OrderController {
       
       // Buscar produtos e calcular valores
       let subtotal = 0;
-      const orderItems = [];
+      const orderItems: { productId: string; productName: string; productSku: string; productImage: any; quantity: number; price: Decimal; total: number; }[] = [];
       
       for (const item of items) {
         const product = await prisma.product.findUnique({
