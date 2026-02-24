@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: cd backend && npm install && npm run db:generate
-    startCommand: cd backend && npm run db:deploy && npx tsx src/index.ts
+    startCommand: cd backend && npm run db:deploy && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
