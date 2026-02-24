@@ -1,10 +1,9 @@
 services:
   - type: web
     name: dei-verbum-api
-    runtime: node
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     plan: free
-    buildCommand: cd backend && npm install && npx prisma generate
-    startCommand: cd backend && npx ts-node --transpileOnly src/index.ts
     envVars:
       - key: NODE_ENV
         value: production
