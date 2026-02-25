@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Garantir que a URL base termine com /api
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api';
+const normalizedBaseURL = baseURL.endsWith('/api') ? baseURL : `${baseURL}/api`;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api',
+  baseURL: normalizedBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
