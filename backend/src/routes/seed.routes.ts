@@ -10,7 +10,13 @@ const router = Router();
 router.get('/migrate', async (req, res) => {
   try {
     console.log('🔄 Executando migrations...');
-    execSync('npx prisma migrate deploy', { cwd: '/app', stdio: 'inherit' });
+    
+    // Executar migration SQL diretamente para adicionar relação vendor em Product
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "vendorId" TEXT;
+      CREATE INDEX IF NOT EXISTS "Product_vendorId_idx" ON "Product"("vendorId");
+    `);
+    
     res.json({ success: true, message: 'Migrations executadas com sucesso!' });
   } catch (error: any) {
     console.error('❌ Erro nas migrations:', error);
