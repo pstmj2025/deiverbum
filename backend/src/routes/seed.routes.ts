@@ -6,6 +6,10 @@ const prisma = new PrismaClient();
 const router = Router();
 
 // Endpoint temporário para seed (remover em produção)
+router.get('/', async (req, res) => {
+  res.json({ message: 'Use POST para executar o seed' });
+});
+
 router.post('/', async (req, res) => {
   try {
     console.log('🌱 Iniciando seed via API...');
