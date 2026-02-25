@@ -1,9 +1,22 @@
 import { Router } from 'express';
-import { PrismaClient, UserRole, ProductCondition, ProductType } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { execSync } from 'child_process';
 
 const prisma = new PrismaClient();
 const router = Router();
+
+// Endpoint para executar migrations
+router.get('/migrate', async (req, res) => {
+  try {
+    console.log('🔄 Executando migrations...');
+    execSync('npx prisma migrate deploy', { cwd: '/app', stdio: 'inherit' });
+    res.json({ success: true, message: 'Migrations executadas com sucesso!' });
+  } catch (error: any) {
+    console.error('❌ Erro nas migrations:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Endpoint temporário para seed (remover em produção)
 router.get('/', async (req, res) => {
