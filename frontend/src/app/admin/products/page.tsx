@@ -8,8 +8,8 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
-          <Link href="/admin/">
-            <ArrowLeft className="h-6 w-6 text-gray-600 hover:text-gray-800" />
+          <Link href="/admin">
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
           <h1 className="text-3xl font-bold">Produtos</h1>
         </div>
@@ -22,7 +22,7 @@ export default function ProductsPage() {
           <p className="text-gray-500">
             Funcionalidade de cadastro de produtos em construção.
           </p>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-sm text-gray-400 mt-4">
             Use a API diretamente: POST /api/products
           </p>
         </div>
