@@ -50,6 +50,18 @@ export default function ProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validação
+    if (!formData.name || !formData.sku || !formData.price || !formData.stock) {
+      setMessage('❌ Preencha todos os campos obrigatórios (Nome, SKU, Preço, Estoque)')
+      return
+    }
+    if (!formData.vendorId) {
+      setMessage('❌ Selecione uma Loja Parceira')
+      return
+    }
+    
+    console.log('Enviando:', formData)
     try {
       await api.post('/products', {
         ...formData,
@@ -61,7 +73,10 @@ export default function ProductsPage() {
       setShowForm(false)
       fetchProducts()
     } catch (err: any) {
-      setMessage('❌ Erro: ' + (err.response?.data?.error || 'Verifique os dados'))
+      const errorMsg = err.response?.data?.error || err.message || 'Erro desconhecido'
+      const errorDetails = err.response?.data?.message || ''
+      setMessage(`❌ Erro: ${errorMsg}${errorDetails ? ' - ' + errorDetails : ''}`)
+      console.log('Erro completo:', err.response?.data)
     }
   }
 
