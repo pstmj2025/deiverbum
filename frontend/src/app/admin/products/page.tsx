@@ -26,11 +26,22 @@ export default function ProductsPage() {
     fetchVendors()
   }, [])
 
+  // Debug: tentar buscar sem filtros
+  const fetchDebug = async () => {
+    try {
+      const res = await api.get('/products?status=ACTIVE')
+      console.log('Produtos ativos:', res.data)
+    } catch (err) {
+      console.log('Erro debug:', err)
+    }
+  }
+
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const res = await api.get('/products')
-      setProducts(res.data.products?.data || [])
+      const res = await api.get('/products?status=ACTIVE')
+      console.log('Resposta API:', res.data)
+      setProducts(res.data.products?.data || res.data || [])
       setError('')
     } catch (err: any) {
       setError('Erro ao carregar produtos: ' + (err.response?.data?.error || err.message))
