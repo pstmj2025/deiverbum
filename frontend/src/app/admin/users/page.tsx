@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Store } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 
-export default function VendorsPage() {
+export default function UsersPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -11,19 +11,16 @@ export default function VendorsPage() {
           <Link href="/admin/">
             <ArrowLeft className="h-6 w-6 text-gray-600 hover:text-gray-800" />
           </Link>
-          <h1 className="text-3xl font-bold">Lojas Parceiras</h1>
+          <h1 className="text-3xl font-bold">Usuários</h1>
         </div>
         
         <div className="bg-white rounded-lg shadow p-8 text-center">
-          <Store className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
             Em desenvolvimento
           </h2>
           <p className="text-gray-500">
-            Funcionalidade de cadastro de lojas parceiras em construção.
-          </p>
-          <p className="text-sm text-gray-400 mt-2">
-            Use a API diretamente: POST /api/vendors
+            Gerenciamento de usuários em construção.
           </p>
         </div>
       </div>
