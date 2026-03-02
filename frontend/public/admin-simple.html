@@ -77,6 +77,38 @@
 
     <script>
         const API_URL = 'https://dei-verbum-api.onrender.com/api';
+        
+        // Verificar login (token JWT)
+        function getToken() {
+            // O token é salvo no localStorage pelo frontend React
+            // Vamos verificar de várias formas possíveis
+            return localStorage.getItem('token') || 
+                   localStorage.getItem('jwt') || 
+                   localStorage.getItem('auth_token') ||
+                   sessionStorage.getItem('token');
+        }
+        
+        // Verificar ao carregar
+        const token = getToken();
+        if (!token) {
+            document.body.innerHTML = `
+                <div style="max-width: 500px; margin: 100px auto; text-align: center; padding: 40px;">
+                    <h2>⚠️ Acesso Negado</h2>
+                    <p>Você precisa estar logado para acessar esta página.</p>
+                    <p style="margin-top: 20px;">
+                        <a href="/login" style="background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                            Fazer Login
+                        </a>
+                    </p>
+                    <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
+                        Ou use a API diretamente se tiver um token válido.
+                    </p>
+                </div>
+            `;
+            throw new Error('Não autenticado');
+        }
+        
+        console.log('✅ Token encontrado, usuário autenticado');
 
         // Cadastrar produto
         document.getElementById('form-produto').addEventListener('submit', async (e) => {
@@ -103,7 +135,10 @@
             try {
                 const response = await fetch(`${API_URL}/products`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
                     body: JSON.stringify(dados)
                 });
 
@@ -132,7 +167,9 @@
             msg.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_URL}/products?status=ACTIVE`);
+                const response = await fetch(`${API_URL}/products?status=ACTIVE`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 const data = await response.json();
                 const produtos = data.products?.data || data.data || [];
 
