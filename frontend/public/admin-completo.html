@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEI VERBUM - Admin Completo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .login-box { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+        .login-box h1 { margin-bottom: 10px; color: #333; }
+        .login-box p { color: #666; margin-bottom: 30px; }
+        .login-box input { width: 100%; padding: 14px; margin-bottom: 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; }
+        .login-box button { width: 100%; padding: 14px; background: #4F46E5; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .login-box button:hover { background: #4338CA; }
+        .login-box button:disabled { background: #9CA3AF; }
+        
+        .dashboard { display: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 24px; color: #333; }
+        .logout-btn { background: #DC2626; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; }
+        
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .card h3 { color: #4F46E5; margin-bottom: 8px; }
+        .card p { color: #666; font-size: 14px; }
+        
+        .section { display: none; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .section.active { display: block; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #374151; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 15px; }
+        
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-right: 10px; }
+        .btn-primary { background: #4F46E5; color: white; }
+        .btn-success { background: #10B981; color: white; }
+        .btn-secondary { background: #6B7280; color: white; }
+        
+        .item { background: #f9fafb; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4F46E5; }
+        .badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; background: #DBEAFE; color: #1E40AF; }
+        
+        .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .message.success { display: block; background: #D1FAE5; color: #065F46; }
+        .message.error { display: block; background: #FEE2E2; color: #991B1B; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN -->
+        <div id="login-screen" class="login-box">
+            <h1>🏪 DEI VERBUM</h1>
+            <p>Painel Administrativo</p>
+            <div id="login-message" class="message"></div>
+            <form id="login-form" onsubmit="login(event)">
+                <input type="email" id="login-email" placeholder="E-mail" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+        </div>
+        
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="dashboard">
+            <div class="header">
+                <h1>📊 Painel Administrativo</h1>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+            
+            <div class="cards">
+                <div class="card" onclick="showSection('vendors')">
+                    <h3>🏪 Lojas Parceiras</h3>
+                    <p>Gerencie as lojas do marketplace</p>
+                </div>
+                <div class="card" onclick="showSection('products')">
+                    <h3>📦 Produtos</h3>
+                    <p>Cadastre e gerencie produtos</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEÇÕES -->
+        <div id="section-vendors" class="section">
+            <button class="btn btn-secondary" onclick="showDashboard()">← Voltar</button>
+            <h2 style="margin: 20px 0;">🏪 Lojas Parceiras</h2>
+            <div id="vendors-message" class="message"></div>
+            
+            <form id="vendor-form" style="margin-bottom: 30px;" onsubmit="createVendor(event)">
+                <div class="form-group">
+                    <input type="text" id="vendor-name" placeholder="Nome da Loja *" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="vendor-email" placeholder="E-mail *" required>
+                </div>
+                <button type="submit" class="btn btn-success">+ Criar Loja</button>
+            </form>
+            
+            <div id="vendors-list"></div>
+        </div>
+        
+        <div id="section-products" class="section">
+            <button class="btn btn-secondary" onclick="showDashboard()">← Voltar</button>
+            <h2 style="margin: 20px 0;">📦 Produtos</h2>
+            <div id="products-message" class="message"></div>
+            
+            <form id="product-form" style="margin-bottom: 30px;" onsubmit="createProduct(event)">
+                <div class="form-group">
+                    <input type="text" id="product-name" placeholder="Nome do Produto *" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" id="product-price" placeholder="Preço (R$) *" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-success">+ Criar Produto</button>
+            </form>
+            
+            <div id="products-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://dei-verbum-api.onrender.com/api';
+        let token = localStorage.getItem('token') || '';
+        
+        // Verificar login ao carregar
+        if (token) {
+            showDashboard();
+        }
+        
+        // LOGIN
+        async function login(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok && data.token) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    showDashboard();
+                    loadData();
+                } else {
+                    showError('login-message', data.error || 'Erro ao fazer login');
+                }
+            } catch (err) {
+                showError('login-message', 'Erro de conexão');
+            }
+        }
+        
+        // LOGOUT
+        function logout() {
+            token = '';
+            localStorage.removeItem('token');
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        }
+        
+        // NAVEGAÇÃO
+        function showDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        }
+        
+        function showSection(id) {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById(`section-${id}`).classList.add('active');
+            if (id === 'vendors') loadVendors();
+            if (id === 'products') loadProducts();
+        }
+        
+        // CRIAR VENDOR
+        async function createVendor(e) {
+            e.preventDefault();
+            const name = document.getElementById('vendor-name').value;
+            const email = document.getElementById('vendor-email').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/vendors`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, email, commissionRate: 10 })
+                });
+                
+                if (res.ok) {
+                    showSuccess('vendors-message', 'Loja criada!');
+                    document.getElementById('vendor-form').reset();
+                    loadVendors();
+                } else {
+                    const data = await res.json();
+                    showError('vendors-message', data.error || 'Erro');
+                }
+            } catch (err) {
+                showError('vendors-message', 'Erro de conexão');
+            }
+        }
+        
+        // CRIAR PRODUTO
+        async function createProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById('product-name').value;
+            const price = parseFloat(document.getElementById('product-price').value);
+            
+            try {
+                const res = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, sku: 'SKU-' + Date.now(), price, stock: 10 })
+                });
+                
+                if (res.ok) {
+                    showSuccess('products-message', 'Produto criado!');
+                    document.getElementById('product-form').reset();
+                    loadProducts();
+                } else {
+                    const data = await res.json();
+                    showError('products-message', data.error || 'Erro');
+                }
+            } catch (err) {
+                showError('products-message', 'Erro de conexão');
+            }
+        }
+        
+        // CARREGAR DADOS
+        async function loadVendors() {
+            const list = document.getElementById('vendors-list');
+            list.innerHTML = '<p style="text-align:center;color:#666">Carregando...</p>';
+            
+            try {
+                const res = await fetch(`${API_URL}/vendors`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const vendors = data.vendors || [];
+                
+                list.innerHTML = vendors.map(v => `
+                    <div class="item">
+                        <div>
+                            <h4>${v.name}</h4>
+                            <p>${v.email}</p>
+                        </div>
+                        <span class="badge">${v.commissionRate}%</span>
+                    </div>
+                `).join('') || '<p style="text-align:center;color:#9CA3AF">Nenhuma loja</p>';
+            } catch (err) {
+                list.innerHTML = '<p style="text-align:center;color:#DC2626">Erro ao carregar</p>';
+            }
+        }
+        
+        async function loadProducts() {
+            const list = document.getElementById('products-list');
+            list.innerHTML = '<p style="text-align:center;color:#666">Carregando...</p>';
+            
+            try {
+                const res = await fetch(`${API_URL}/products?status=ACTIVE`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const products = (data.products?.data || data.data || []);
+                
+                list.innerHTML = products.map(p => `
+                    <div class="item">
+                        <div>
+                            <h4>${p.name}</h4>
+                            <p>SKU: ${p.sku}</p>
+                        </div>
+                        <span class="badge">R$ ${parseFloat(p.price).toFixed(2)}</span>
+                    </div>
+                `).join('') || '<p style="text-align:center;color:#9CA3AF">Nenhum produto</p>';
+            } catch (err) {
+                list.innerHTML = '<p style="text-align:center;color:#DC2626">Erro ao carregar</p>';
+            }
+        }
+        
+        // UTILIDADES
+        function showSuccess(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = '✅ ' + msg;
+            el.className = 'message success';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+        
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = '❌ ' + msg;
+            el.className = 'message error';
+        }
+        
+        function loadData() {
+            loadVendors();
+            loadProducts();
+        }
+    </script>
+</body>
+</html>
