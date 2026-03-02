@@ -40,8 +40,23 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏪 DEI VERBUM - Painel Administrativo</h1>
-        <p class="subtitle">Versão simples (fallback)</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px;">
+            <div>
+                <h1 style="margin: 0;">🏪 DEI VERBUM - Painel Administrativo</h1>
+                <p class="subtitle" style="margin: 5px 0 0 0;">Versão simples</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="/" style="background: #6B7280; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">
+                    ← Site
+                </a>
+                <a href="/admin" style="background: #4F46E5; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">
+                    Painel Principal
+                </a>
+                <button onclick="logout()" style="background: #DC2626; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    Sair
+                </button>
+            </div>
+        </div>
         
         <div class="nav">
             <a href="#cadastrar">📦 Cadastrar Produto</a>
@@ -91,21 +106,9 @@
         // Verificar ao carregar
         const token = getToken();
         if (!token) {
-            document.body.innerHTML = `
-                <div style="max-width: 500px; margin: 100px auto; text-align: center; padding: 40px;">
-                    <h2>⚠️ Acesso Negado</h2>
-                    <p>Você precisa estar logado para acessar esta página.</p>
-                    <p style="margin-top: 20px;">
-                        <a href="/login" style="background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                            Fazer Login
-                        </a>
-                    </p>
-                    <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
-                        Ou use a API diretamente se tiver um token válido.
-                    </p>
-                </div>
-            `;
-            throw new Error('Não autenticado');
+            // Redireciona para login com URL de retorno
+            window.location.href = '/login?redirect=/admin-simple.html';
+            throw new Error('Redirecionando para login...');
         }
         
         console.log('✅ Token encontrado, usuário autenticado');
@@ -133,22 +136,34 @@
             };
 
             try {
+                const currentToken = getToken();
+                if (!currentToken) {
+                    msg.innerHTML = '<div class="error">❌ Sessão expirada. <a href="/login?redirect=/admin-simple.html">Faça login novamente</a></div>';
+                    return;
+                }
+                
                 const response = await fetch(`${API_URL}/products`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
+                        'Authorization': `Bearer ${currentToken}` 
                     },
                     body: JSON.stringify(dados)
                 });
 
+                if (response.status === 401) {
+                    msg.innerHTML = '<div class="error">❌ Token inválido ou expirado. <a href="/login?redirect=/admin-simple.html">Faça login novamente</a></div>';
+                    return;
+                }
+                
                 if (response.ok) {
                     msg.innerHTML = '<div class="success">✅ Produto cadastrado com sucesso!</div>';
                     document.getElementById('form-produto').reset();
                     carregarProdutos();
                 } else {
                     const erro = await response.json();
-                    msg.innerHTML = `<div class="error">❌ Erro: ${erro.error || 'Não foi possível cadastrar'}</div>`;
+                    msg.innerHTML = `<div class="error">❌ Erro: ${erro.error || erro.message || 'Não foi possível cadastrar'}</div>`;
+                    console.log('Erro completo:', erro);
                 }
             } catch (err) {
                 msg.innerHTML = `<div class="error">❌ Erro de conexão: ${err.message}</div>`;
@@ -195,6 +210,14 @@
 
         // Carregar ao iniciar
         carregarProdutos();
+        
+        // Função de logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+        }
     </script>
 </body>
 </html>
