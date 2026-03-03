@@ -27,7 +27,11 @@ export default function VendorsPage() {
     try {
       setLoading(true)
       const res = await api.get('/vendors')
-      setVendors(res.data.vendors || [])
+      console.log('Resposta vendors:', res.data)
+      const vendorsData = res.data?.vendors || 
+                         res.data?.data || 
+                         (Array.isArray(res.data) ? res.data : [])
+      setVendors(vendorsData || [])
       setError('')
     } catch (err: any) {
       setError('Erro ao carregar lojas: ' + (err.response?.data?.error || err.message))
