@@ -9,7 +9,7 @@ ENV API_URL=${API_URL}
 
 # Instalar dependências
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copiar código
 COPY . .
