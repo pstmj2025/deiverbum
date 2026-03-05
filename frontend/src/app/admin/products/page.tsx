@@ -6,8 +6,8 @@ import { ArrowLeft, Package, Plus } from 'lucide-react'
 import api from '@/lib/axios'
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([])
-  const [vendors, setVendors] = useState([])
+  const [products, setProducts] = useState<any[]>([])
+  const [vendors, setVendors] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
