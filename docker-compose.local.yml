@@ -1,2 +1,72 @@
 # DEI VERBUM - Stack Local (build direto, sem Git)
-version: 
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dei-verbum-db
+    restart: always
+    environment:
+      POSTGRES_USER: dei_verbum
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: dei_verbum_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dei-verbum
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dei_verbum"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: dei-verbum-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://dei_verbum:${DB_PASSWORD}@postgres:5432/dei_verbum_prod
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      STORE_NAME: ${STORE_NAME:-DEI VERBUM}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dei-verbum
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: dei-verbum-web
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - dei-verbum
+
+  nginx:
+    image: nginx:alpine
+    container_name: dei-verbum-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-simple.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - dei-verbum
+
+networks:
+  dei-verbum:
+    driver: bridge
+
+volumes:
+  postgres_data:
