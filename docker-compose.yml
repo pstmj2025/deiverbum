@@ -1,56 +1,135 @@
+# DEI VERBUM - Stack Completa (Backend + Frontend + Nginx)
 version: '3.8'
 
 services:
-  # Banco de dados PostgreSQL
+  # PostgreSQL
   postgres:
     image: postgres:16-alpine
     container_name: dei-verbum-db
     restart: always
     environment:
       POSTGRES_USER: dei_verbum
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-deiverbum123}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: dei_verbum_prod
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dei-verbum
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dei_verbum"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # Cache Redis
-  redis:
-    image: redis:7-alpine
-    container_name: dei-verbum-cache
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  # Backend API (desenvolvimento)
+  # Backend API
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: https://github.com/pstmj2025/deiverbum.git#master
+      dockerfile: backend/Dockerfile
     container_name: dei-verbum-api
     restart: always
     environment:
-      NODE_ENV: development
-      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://dei_verbum:${DB_PASSWORD}@postgres:5432/dei_verbum_prod
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 7d
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      ASAAS_API_KEY: ${ASAAS_API_KEY}
-      REDIS_URL: redis://redis:6379
-      PORT: 3001
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ASAAS_API_KEY: ${ASAAS_API_KEY:-}
+      ASAAS_ENV: ${ASAAS_ENV:-sandbox}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      STORE_NAME: ${STORE_NAME:-DEI VERBUM}
+      STORE_EMAIL: ${STORE_EMAIL:-contato@deiverbum.com.br}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+    networks:
+      - dei-verbum
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: https://github.com/pstmj2025/deiverbum.git#master
+      dockerfile: frontend/Dockerfile
+      args:
+        - API_URL=${API_URL:-http://backend:3001}
+    container_name: dei-verbum-web
+    restart: always
+    environment:
+      - API_URL=${API_URL:-http://backend:3001}
+    depends_on:
+      - backend
+    networks:
+      - dei-verbum
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: dei-verbum-nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - dei-verbum
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/nginx.conf
+
+networks:
+  dei-verbum:
+    driver: bridge
 
 volumes:
   postgres_data:
-  redis_data:
+
+configs:
+  nginx_conf:
+    content: |
+      events {
+          worker_connections 1024;
+      }
+      
+      http {
+          include       /etc/nginx/mime.types;
+          default_type  application/octet-stream;
+          
+          upstream backend {
+              server backend:3001;
+          }
+          
+          upstream frontend {
+              server frontend:3000;
+          }
+          
+          server {
+              listen 80;
+              server_name localhost;
+              
+              # API
+              location /api/ {
+                  proxy_pass http://backend/;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              }
+              
+              # Health
+              location /health {
+                  proxy_pass http://backend/health;
+              }
+              
+              # Frontend
+              location / {
+                  proxy_pass http://frontend;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              }
+          }
+      }
