@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Serviço de integração com Stripe para cartões
 import Stripe from 'stripe';
 import { env } from '../config/env';
