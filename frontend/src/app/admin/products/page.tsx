@@ -53,9 +53,18 @@ export default function ProductsPage() {
   const fetchVendors = async () => {
     try {
       const res = await api.get('/vendors')
-      setVendors(res.data.vendors || [])
-    } catch (err) {
+      console.log('Resposta vendors:', res.data)
+      // A API retorna { success: true, vendors: [...] }
+      const vendorsData = res.data?.vendors
+      if (Array.isArray(vendorsData)) {
+        setVendors(vendorsData)
+      } else {
+        console.warn('Vendors não é um array:', vendorsData)
+        setVendors([])
+      }
+    } catch (err: any) {
       console.log('Erro ao carregar vendors:', err)
+      setVendors([])
     }
   }
 

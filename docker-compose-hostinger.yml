@@ -1,0 +1,154 @@
+# DEI VERBUM - Stack para Dockge (Hostinger VPS)
+# Cole este conteúdo completo no Dockge ao criar uma nova Stack
+
+version: '3.8'
+
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: dei-verbum-db
+    restart: always
+    environment:
+      POSTGRES_USER: dei_verbum
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: dei_verbum_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dei-verbum
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dei_verbum"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: https://github.com/pstmj2025/deiverbum.git#main
+      dockerfile: backend/Dockerfile
+    container_name: dei-verbum-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://dei_verbum:${DB_PASSWORD}@postgres:5432/dei_verbum_prod
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ASAAS_API_KEY: ${ASAAS_API_KEY:-}
+      ASAAS_ENV: ${ASAAS_ENV:-sandbox}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      STORE_NAME: ${STORE_NAME:-DEI VERBUM}
+      STORE_EMAIL: ${STORE_EMAIL:-contato@deiverbum.com.br}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - dei-verbum
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend
+  frontend:
+    build:
+      context: https://github.com/pstmj2025/deiverbum.git#main
+      dockerfile: frontend/Dockerfile
+      args:
+        - API_URL=${API_URL:-http://backend:3001}
+    container_name: dei-verbum-web
+    restart: always
+    environment:
+      - API_URL=${API_URL:-http://backend:3001}
+    depends_on:
+      - backend
+    networks:
+      - dei-verbum
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: dei-verbum-nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - dei-verbum
+    volumes:
+      - uploads:/var/www/uploads:ro
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/nginx.conf
+
+networks:
+  dei-verbum:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  uploads:
+
+configs:
+  nginx_conf:
+    content: |
+      events {
+          worker_connections 1024;
+      }
+      
+      http {
+          upstream backend {
+              server backend:3001;
+          }
+          
+          upstream frontend {
+              server frontend:3000;
+          }
+          
+          server {
+              listen 80;
+              
+              # API - tudo que começa com /api vai pro backend
+              location /api/ {
+                  proxy_pass http://backend/;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+              }
+              
+              # Health check do backend
+              location /health {
+                  proxy_pass http://backend/health;
+              }
+              
+              # Static files (uploads)
+              location /uploads/ {
+                  alias /var/www/uploads/;
+                  expires 30d;
+              }
+              
+              # Frontend - todo o resto
+              location / {
+                  proxy_pass http://frontend;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+      }
