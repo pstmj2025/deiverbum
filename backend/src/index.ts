@@ -17,6 +17,7 @@ import { addressRouter } from './routes/address.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { seedRouter } from './routes/seed.routes';
 import { vendorRouter } from './routes/vendor.routes';
+import { uploadRouter } from './routes/upload.routes';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/addresses', addressRouter);
 app.use('/api/payments', paymentRouter);
 app.use('/api/seed', seedRouter);
 app.use('/api/vendors', vendorRouter);
+app.use('/api/upload', uploadRouter);
 // /api/products
 // /api/orders
 // /api/cart
