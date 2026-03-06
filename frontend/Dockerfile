@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Argumentos de build
 ARG API_URL
-ENV API_URL=${API_URL}
+ENV NEXT_PUBLIC_API_URL=${API_URL}
 
 # Instalar dependências (do contexto root, pegando da pasta frontend)
 COPY frontend/package*.json ./

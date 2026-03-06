@@ -43,8 +43,12 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        - API_URL=http://187.77.45.220/api
     container_name: dei-verbum-web
     restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=http://187.77.45.220/api
     depends_on:
       - backend
     networks:
